@@ -1,16 +1,17 @@
+import {STUDY_PROTOCOL} from './study.ts';
 import type {Env} from './types.ts';
 import {login,verify} from './auth.ts';
 import {metadata} from './personas.ts';
 export const base=`WITH eligible AS (
  SELECT s.* FROM study_sessions s WHERE EXISTS (
- SELECT 1 FROM study_events e WHERE e.session_id=s.id AND json_extract(e.payload,'$.mode')='study')
+ SELECT 1 FROM study_events e WHERE e.session_id=s.id AND json_extract(e.payload,'$.mode')='study' AND json_extract(e.payload,'$.protocol')='${STUDY_PROTOCOL}')
 ), ranked AS (
  SELECT e.session_id,e.seq,e.received_at,json_extract(e.payload,'$.personaId') persona_id,
  json_extract(e.payload,'$.condition') condition,json_extract(e.payload,'$.score') score,
  json_extract(e.payload,'$.note') note,json_extract(e.payload,'$.turns') turns,
  ROW_NUMBER() OVER (PARTITION BY e.session_id,json_extract(e.payload,'$.personaId'),json_extract(e.payload,'$.condition') ORDER BY e.seq DESC,e.received_at DESC) rank
  FROM study_events e JOIN eligible s ON s.id=e.session_id
- WHERE json_extract(e.payload,'$.mode')='study' AND json_extract(e.payload,'$.type')='rating'
+ WHERE json_extract(e.payload,'$.mode')='study' AND json_extract(e.payload,'$.protocol')='${STUDY_PROTOCOL}' AND json_extract(e.payload,'$.type')='rating'
  AND json_extract(e.payload,'$.personaId') IN ('p01','p02','p03','p04','p05')
  AND json_extract(e.payload,'$.condition') IN ('without_skill','with_skill')
  AND json_extract(e.payload,'$.score') IN (1,2,3,4,5)

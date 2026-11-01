@@ -27,3 +27,5 @@ Formal evaluation starts at `2026-11-01T09:29:38.000Z` (2026-11-01 17:29:38 Asia
 Participants use `my-scores.html` via “我的评分 / My ratings”. `/api/my-ratings` returns only server-confirmed ratings for the authenticated owner, across their study sessions. It never accepts another owner ID from query parameters. Anonymous identities cannot be recovered across a new login or browser. Drafts and pending uploads are not shown as submitted.
 
 The dashboard's overall with/without means are macro-averages: first compute each persona's session-level mean within the group, then average the nonempty persona means with equal weights. Report coverage (personas out of five) and rating count; empty groups remain null, never zero. Individual persona statistics remain available below the macro-average.
+
+Formal dashboards and personal history include only the formal protocol. Older-client events received during the deployment transition remain outside the formal statistics, even if received after the cutoff.
