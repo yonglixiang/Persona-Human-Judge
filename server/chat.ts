@@ -1,7 +1,7 @@
 import {settings} from './settings.ts';
 import {skill,metadata} from './personas.ts';
 import type {Env} from './types.ts';
-import {responseBody,outputText} from './openai-chat.ts';
+import {responseBody,outputText,ROLEPLAY_VERSION} from './openai-chat.ts';
 
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 const uuid=/^[a-f0-9-]{36}$/i;
@@ -33,7 +33,7 @@ export async function POST(request:Request, env:Env){
  const rows=await db.prepare("SELECT * FROM model_turns WHERE session_id=? AND persona_id=? AND condition=? AND status='completed' ORDER BY turn").bind(b.sessionId,b.personaId,b.condition).all<Turn>();
  if(rows.results.length>=cfg.maxTurns)return reply({error:'已达到对话轮次上限'},409);
  const turn=rows.results.length+1;if(event.turn!==turn)return reply({error:'对话轮次不一致，请刷新后重试'},409);
- const personaSkill=b.condition==='with_skill'?await skill(env,b.personaId):{text:'',version:'without-skill'};const PROMPT_VERSION=personaSkill.version;
+ const personaSkill=b.condition==='with_skill'?await skill(env,b.personaId):{text:'',version:'without-skill'};const PROMPT_VERSION=b.condition==='with_skill'?ROLEPLAY_VERSION+':'+personaSkill.version:personaSkill.version;
  const now=new Date().toISOString();
  if(existing){
  // A stale/uncertain call is not automatically duplicated: the original may still be running.

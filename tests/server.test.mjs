@@ -31,3 +31,10 @@ test('source metadata is preserved verbatim and questions remain supplemental',a
  assert.deepEqual(result[0].translations.en,{suggested_questions:questions.en});
  assert.ok(!('bio' in result[0]));
 });
+
+test('only group B receives explicit first-person role-play instructions and verbatim skill',()=>{
+ const skill='Original skill\nKeep this content unchanged.';
+ const a=responseBody(cfg,'without_skill',[],'Hello',skill),b=responseBody(cfg,'with_skill',[],'Hello',skill);
+ assert.equal(a.instructions,'Respond naturally to the user in their language. Be concise and conversational.');
+ assert.match(b.instructions,/Role-play as the persona/);assert.match(b.instructions,/first person/);assert.ok(b.instructions.endsWith(skill));
+});
