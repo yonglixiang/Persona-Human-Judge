@@ -78,3 +78,13 @@ PERSONAS_BUCKET=persona-human-judge-personas node scripts/upload-personas.mjs /a
 `translations` 可包含完整的 `zh` / `en` 展示对象（字段与顶层 metadata 相同，但不含 `id` 或嵌套 translations）。两种语言各提供 3 个 `suggested_questions`，编号和语义一一对应。服务器只返回白名单展示字段，skill 不包含在翻译数据中。原始 skill 不翻译或改写。
 
 界面语言会随每条研究事件保存为 `uiLanguage`。切换语言不会翻译已发送的消息，也不会改变已有评分。实际聊天回复沿用用户提问语言。
+
+## 原始 metadata（当前真实资料使用此格式）
+
+用户提供的 `metadata.json` 与 skill 原文是唯一资料来源，不做摘要、改写、字段删减或自动纠错。仅执行用户明确指定的修改（目前只有 p03 改名）。`skill.md` 保留原始 `SKILL.md` 的完整内容。
+
+每个人格目录另放 `questions.json`：`{"zh":["问题1","问题2","问题3"],"en":["Question 1","Question 2","Question 3"]}`。问题属于辅助交互，不写入 metadata 或 skill。
+
+原始 metadata 字段为 `persona`, `name`, `age`, `gender`, `race`, `born place`, `general experience`, `personality`, `occupation`, `education`, `big_five`, `language_style`, `character`。前端根据这些字段展示全文，保留换行；不从出生地推断现居地，不从 skill 生成展示资料。界面标签支持中英文，资料内容使用原文，直到用户提供或确认忠实翻译。其他未声明字段不自动公开。
+
+前述简化 schema 仅用于仓库中的虚构示例，真实资料无需转换到该 schema。上传脚本同时支持两种格式。上传原始资料时需同时上传独立的 `questions.json`，已整理的 `private-personas-ready.zip` 包含此文件。

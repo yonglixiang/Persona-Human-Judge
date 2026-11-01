@@ -18,3 +18,16 @@ test('persona API returns three fixed questions but never raw private fields',as
 test('translated metadata is whitelisted and translations require both locales',async()=>{
  const {metadata}=await import('../server/personas.ts');const fields={name:'Fixture',en:'',age:'',role:'Role',city:'',bio:'Bio',values:'Values',interests:'Interests',voice:'Voice',quote:'',tags:[],suggested_questions:['One?','Two?','Three?']};const item={...fields,translations:{zh:{...fields,skill:'private'},en:{...fields,secret:'private'}}};const env={PERSONAS:{get:async key=>({json:async()=>key==='manifest.json'?{ids:['p01','p02','p03','p04','p05']}:item})}};const result=await metadata(env);assert.ok(!('skill' in result[0].translations.zh));assert.ok(!('secret' in result[0].translations.en));delete item.translations.en;await assert.rejects(()=>metadata(env));
 });
+
+test('source metadata is preserved verbatim and questions remain supplemental',async()=>{
+ const {metadata}=await import('../server/personas.ts');
+ const keys=['persona','name','age','gender','race','born place','general experience','personality','occupation','education','big_five','language_style','character'];
+ const source=Object.fromEntries(keys.map(k=>[k,`${k}: original text\nSecond paragraph.`]));
+ const original=structuredClone(source);const questions={zh:['一？','二？','三？'],en:['One?','Two?','Three?']};
+ const env={PERSONAS:{get:async key=>({json:async()=>key==='manifest.json'?{ids:['p01','p02','p03','p04','p05']}:key.endsWith('questions.json')?questions:source})}};
+ const result=await metadata(env);
+ assert.deepEqual(result[0].source_metadata,original);assert.deepEqual(source,original);
+ assert.equal(result[0].role,source.occupation);assert.equal(result[0].city,'');
+ assert.deepEqual(result[0].translations.en,{suggested_questions:questions.en});
+ assert.ok(!('bio' in result[0]));
+});
