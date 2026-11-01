@@ -1,3 +1,4 @@
+import * as mine from './mine.ts';
 import {handle as admin} from './admin.ts';
 import type {Env} from './types.ts';
 import {login,verify} from './auth.ts';
@@ -20,6 +21,7 @@ export default {async fetch(request:Request,env:Env){
  if(!owner)return finish(Response.json({error:'请先输入研究访问口令',code:'AUTH_REQUIRED'},{status:401}));
  const incoming=new Headers(request.headers);incoming.delete('oai-authenticated-user-id');incoming.delete('oai-authenticated-user-email');incoming.set('oai-authenticated-user-id',owner);
  const req=new Request(request,{headers:incoming});
+ if(path==='/api/my-ratings'&&request.method==='GET')return finish(await mine.GET(req,env));
  if(path==='/api/personas'&&request.method==='GET')return finish(Response.json({personas:await metadata(env)}));
  if(path==='/api/chat'&&request.method==='GET')return finish(await chat.GET(req,env));
  if(path==='/api/chat'&&request.method==='POST')return finish(await chat.POST(req,env));

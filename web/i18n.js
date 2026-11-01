@@ -116,6 +116,8 @@ const EN={
   "此回复仍在处理中，请稍后重试": "This reply is still processing. Please retry shortly.",
   "请求失败，请重试或联系研究负责人。": "Request failed. Please retry or contact the study owner."
 };
+EN['我的评分']='My ratings';
+EN['正式评测已开始，请刷新页面开启新评测；旧测试记录不再接收。']='Formal evaluation has started. Refresh to start a new study; old test records are no longer accepted.';
 EN['进行中']='In progress';
 let uiLanguage='zh';try{uiLanguage=localStorage.getItem('persona-ui-language')||(navigator.language?.startsWith('zh')?'zh':'en')}catch{}if(!['zh','en'].includes(uiLanguage))uiLanguage='zh';
 function tr(key,vars={}){let text=uiLanguage==='en'?(EN[key]||key):key;return text.replace(/\{(\w+)\}/g,(_,k)=>String(vars[k]??''));}

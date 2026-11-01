@@ -1,5 +1,6 @@
 let personas=[];
-const KEY='persona-study-github-v4';
+const KEY='persona-study-formal-20261101';
+try{localStorage.removeItem('persona-study-github-v4')}catch{}
 const fresh=()=>({id:crypto.randomUUID(),index:0,group:0,stage:'intro',seq:0,queue:[],sessions:Array.from({length:10},()=>({messages:[],rating:null,note:'',submitted:false,acknowledged:false,started:false,ended:false,request:null,chatError:''})),completeQueued:false});
 let state=fresh();try{const old=JSON.parse(localStorage.getItem(KEY));if(old&&old.sessions?.length===10&&old.id&&Array.isArray(old.queue))state=old}catch{}
 let maxTurns=6;let config={ready:false,loading:true,error:'',authRequired:false};let selectedQuestionText=null;let submitting=false;let pending=false,run=0,storageOK=true,uploadBusy=false,uploadError='',uploadPromise=null;
@@ -10,7 +11,7 @@ const rounds=()=>session().messages.filter(m=>m.role==='agent').length;
 const condition=()=>state.group===0?'without_skill':'with_skill';
 const groupLabel=()=>state.group===0?'A':'B';
 function status(){const el=$('#uploadStatus');if(el)el.textContent=uploadBusy?tr('正在上传…'):uploadError?tr('上传失败：{error}（记录保留，可重试）',{error:errorText(uploadError)}):state.queue.length?tr('待上传 {n} 条记录',{n:state.queue.length}):tr('全部记录已上传');const b=$('#retryUpload');if(b)b.hidden=!state.queue.length||uploadBusy;}
-function event(type,extra={}){state.queue.push({id:crypto.randomUUID(),sessionId:state.id,seq:++state.seq,protocol:'paired-fixed-v2',mode:'study',uiLanguage,personaId:personas[state.index].id,condition:condition(),type,at:new Date().toISOString(),...extra});save();status();return state.queue.at(-1).id;}
+function event(type,extra={}){state.queue.push({id:crypto.randomUUID(),sessionId:state.id,seq:++state.seq,protocol:'paired-formal-20261101',mode:'study',uiLanguage,personaId:personas[state.index].id,condition:condition(),type,at:new Date().toISOString(),...extra});save();status();return state.queue.at(-1).id;}
 async function flush(){if(!state.queue.length)return true;if(uploadPromise)return uploadPromise;uploadPromise=(async()=>{uploadBusy=true;uploadError='';status();try{while(state.queue.length){const e=state.queue[0];const r=await apiFetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e),signal:AbortSignal.timeout(12000)});const body=await r.json();if(!r.ok||body.saved!==true||body.id!==e.id)throw Error(body.error||'服务器未确认保存');state.queue.shift();save();}return true;}catch(e){uploadError=e.message||'网络异常';return false;}finally{uploadBusy=false;uploadPromise=null;status();}})();return uploadPromise;}
 window.addEventListener('online',()=>flush());
 function change(stage){state.stage=stage;save();render();$('#main').focus({preventScroll:true});window.scrollTo({top:0});$('#viewport').scrollTop=0}

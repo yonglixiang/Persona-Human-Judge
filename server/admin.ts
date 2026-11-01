@@ -1,7 +1,7 @@
 import type {Env} from './types.ts';
 import {login,verify} from './auth.ts';
 import {metadata} from './personas.ts';
-const base=`WITH eligible AS (
+export const base=`WITH eligible AS (
  SELECT s.* FROM study_sessions s WHERE EXISTS (
  SELECT 1 FROM study_events e WHERE e.session_id=s.id AND json_extract(e.payload,'$.mode')='study')
 ), ranked AS (
@@ -15,6 +15,9 @@ const base=`WITH eligible AS (
  AND json_extract(e.payload,'$.condition') IN ('without_skill','with_skill')
  AND json_extract(e.payload,'$.score') IN (1,2,3,4,5)
 ), ratings AS (SELECT * FROM ranked WHERE rank=1)`;
+export function macroAverages(groups:Array<any>){
+ return ['without_skill','with_skill'].map(condition=>{const included=groups.filter(g=>g.condition===condition&&Number(g.n)>0);return {condition,mean:included.length?included.reduce((sum,g)=>sum+Number(g.mean),0)/included.length:null,personaCount:included.length,ratingCount:included.reduce((sum,g)=>sum+Number(g.n),0)};});
+}
 export async function handle(request:Request,env:Env){
  if(!env.ADMIN_ACCESS_CODE||!env.SESSION_SECRET)return Response.json({error:'请先配置 ADMIN_ACCESS_CODE'},{status:503});
  if(env.ADMIN_ACCESS_CODE===env.STUDY_ACCESS_CODE)return Response.json({error:'管理员口令必须与参与者口令不同'},{status:503});
@@ -31,7 +34,7 @@ export async function handle(request:Request,env:Env){
  (SELECT COUNT(DISTINCT owner) FROM eligible WHERE id IN (SELECT session_id FROM ratings GROUP BY session_id HAVING COUNT(*)=10)) completedParticipants`),
  env.DB.prepare(base+` SELECT persona_id,condition,COUNT(*) n,AVG(score) mean FROM ratings GROUP BY persona_id,condition`)]);
  let names:Record<string,string>={};try{names=Object.fromEntries((await metadata(env)).map(p=>[String(p.id),String(p.name)]))}catch{}
- return Response.json({counts:counts.results[0],groups:groups.results,names,updatedAt:new Date().toISOString()});
+ return Response.json({counts:counts.results[0],groups:groups.results,macro:macroAverages(groups.results),names,updatedAt:new Date().toISOString()});
  }
  if(url.pathname==='/api/admin/sessions'){
  const page=Math.max(1,Math.min(100000,Number(url.searchParams.get('page'))||1));
