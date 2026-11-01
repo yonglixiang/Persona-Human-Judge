@@ -1,0 +1,25 @@
+{
+  "name": "persona-human-judge-local",
+  "main": "server/index.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "ALLOWED_ORIGIN": "http://localhost:8080"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "persona-human-judge-local",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PERSONAS",
+      "bucket_name": "persona-human-judge-local"
+    }
+  ]
+}

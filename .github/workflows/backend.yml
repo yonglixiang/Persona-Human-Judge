@@ -1,0 +1,52 @@
+name: Deploy backend to Cloudflare
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: backend-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: vars.BACKEND_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      ALLOWED_ORIGIN: ${{ vars.ALLOWED_ORIGIN }}
+      WORKER_NAME: ${{ vars.WORKER_NAME }}
+      PERSONAS_BUCKET: ${{ vars.PERSONAS_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm run check && npm test
+      - run: npm run config:deploy
+      - name: Validate secrets are present
+        env:
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          REASONING_EFFORT: ${{ secrets.REASONING_EFFORT }}
+          MAX_TURNS: ${{ secrets.MAX_TURNS }}
+          MAX_OUTPUT_TOKENS: ${{ secrets.MAX_OUTPUT_TOKENS }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          STUDY_ACCESS_CODE: ${{ secrets.STUDY_ACCESS_CODE }}
+        run: node scripts/check-secrets.mjs
+      - run: npm run db:migrate
+      - run: npm run deploy
+      - name: Upload server secrets without exposing values
+        env:
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          REASONING_EFFORT: ${{ secrets.REASONING_EFFORT }}
+          MAX_TURNS: ${{ secrets.MAX_TURNS }}
+          MAX_OUTPUT_TOKENS: ${{ secrets.MAX_OUTPUT_TOKENS }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          STUDY_ACCESS_CODE: ${{ secrets.STUDY_ACCESS_CODE }}
+        run: node scripts/sync-secrets.mjs

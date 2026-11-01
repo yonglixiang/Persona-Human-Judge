@@ -1,0 +1,13 @@
+node_modules/
+.wrangler/
+.deploy/
+site/
+.dev.vars*
+.env*
+!.env.example
+private-personas/
+exports/
+*.zip
+*.tar.gz
+*.pem
+.DS_Store
