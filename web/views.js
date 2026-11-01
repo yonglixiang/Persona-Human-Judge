@@ -1,3 +1,13 @@
+function languageDimensions(value){
+ const text=String(value||'');
+ const headings=[...text.matchAll(/^([^\n:：]{1,80}[:：])[ \t]*\r?\n/gm)];
+ if(!headings.length)return `<details class="language-dimension"><summary>${uiLanguage==='en'?'Full text':'完整原文'}</summary><div class="profile-prose"><p>${text}</p></div></details>`;
+ const prefix=text.slice(0,headings[0].index);
+ return (prefix.trim()?`<div class="profile-prose"><p>${prefix}</p></div>`:'')+headings.map((match,i)=>{
+ const body=text.slice(match.index+match[0].length,headings[i+1]?.index??text.length);
+ return `<details class="language-dimension"><summary>${match[1]}</summary><div class="profile-prose"><p>${body}</p></div></details>`;
+ }).join('');
+}
 function sourceFacts(m){
  const labels={persona:['人格描述','Persona'],name:['姓名','Name'],age:['年龄','Age'],gender:['性别','Gender'],race:['族裔','Race'],'born place':['出生地','Birthplace'],'general experience':['背景经历','Background & experience'],personality:['人格特点','Personality'],occupation:['职业','Occupation'],education:['教育背景','Education'],big_five:['大五人格','Big Five'],language_style:['表达风格','Language style'],character:['完整人物描述','Full character description']};
  const label=key=>labels[key][uiLanguage==='en'?1:0];
@@ -5,7 +15,7 @@ function sourceFacts(m){
  const prose=value=>String(value||'').split(/\n\s*\n/).filter(Boolean).map(part=>`<p>${part}</p>`).join('');
  const basics=['name','age','occupation','education','gender','race','born place'];
  const section=key=>m[key]?`<section class="profile-section"><h3>${label(key)}</h3><div class="profile-prose">${prose(m[key])}</div></section>`:'';
- return `<div class="source-profile"><section class="profile-overview"><h3>${uiLanguage==='en'?'At a glance':'基本资料'}</h3><dl class="profile-basics">${basics.filter(k=>m[k]).map(k=>`<div><dt>${label(k)}</dt><dd>${m[k]}</dd></div>`).join('')}</dl></section>${section('persona')}${section('general experience')}${section('personality')}${section('big_five')}<details class="profile-disclosure" open><summary>${label('language_style')}</summary><div class="profile-prose">${prose(m.language_style)}</div></details><details class="profile-disclosure"><summary>${label('character')}<span>${uiLanguage==='en'?'Read full text':'展开阅读全文'}</span></summary><div class="profile-prose">${prose(m.character)}</div></details></div>`;
+ return `<div class="source-profile"><section class="profile-overview"><h3>${uiLanguage==='en'?'At a glance':'基本资料'}</h3><dl class="profile-basics">${basics.filter(k=>m[k]).map(k=>`<div><dt>${label(k)}</dt><dd>${m[k]}</dd></div>`).join('')}</dl></section>${section('persona')}${section('general experience')}${section('personality')}${section('big_five')}<section class="profile-section language-style"><h3>${label('language_style')}</h3><div class="language-dimensions">${languageDimensions(m.language_style)}</div></section><details class="profile-disclosure"><summary>${label('character')}<span>${uiLanguage==='en'?'Read full text':'展开阅读全文'}</span></summary><div class="profile-prose">${prose(m.character)}</div></details></div>`;
 }
 function facts(p){if(p.source_metadata)return sourceFacts(p.source_metadata);return `<div class="facts">${[['背景经历',p.bio],...(p.birthplace?[['出生地',p.birthplace]]:[]),...(p.personality?[['人格特点',p.personality]]:[]),['价值观',p.values],['兴趣与日常',p.interests],['表达习惯',p.voice]].map(([k,v])=>`<div class="fact"><label>${tr(k)}</label><p>${v}</p></div>`).join('')}</div>`}
 function transcript(){return session().messages.map(m=>`<div class="message ${m.role==='user'?'you':''}"><small>${m.role==='user'?tr('你'):'Agent '+groupLabel()}</small><div class="bubble">${esc(m.text)}</div></div>`).join('')}
