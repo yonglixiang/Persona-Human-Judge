@@ -1,3 +1,4 @@
+import {handle as admin} from './admin.ts';
 import type {Env} from './types.ts';
 import {login,verify} from './auth.ts';
 import * as chat from './chat.ts';
@@ -12,6 +13,7 @@ export default {async fetch(request:Request,env:Env){
  if(request.method==='OPTIONS')return finish(new Response(null,{status:204,headers}));
  const path=new URL(request.url).pathname;
  try{
+ if(path.startsWith('/api/admin/'))return finish(await admin(request,env));
  if(path==='/api/session'&&request.method==='POST')return finish(await login(request,env));
  if(!env.SESSION_SECRET)return finish(Response.json({error:'服务端尚未配置'},{status:503}));
  const token=request.headers.get('Authorization')?.replace(/^Bearer /,'')??'';const owner=await verify(token,env.SESSION_SECRET);

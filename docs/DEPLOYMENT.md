@@ -78,3 +78,7 @@ GitHub Pages 网站本身是公开的，但需要研究口令才能访问后端�
 - [GitHub Pages 静态托管](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 - [Cloudflare GitHub Actions 部署](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
 - [Workers Secrets](https://developers.cloudflare.com/workers/configuration/secrets/)
+
+## 研究者看板
+
+GitHub Actions Secrets 中新增 `ADMIN_ACCESS_CODE`（独立于 `STUDY_ACCESS_CODE`，不限制字符长度），重新运行后端部署。访问 `https://yonglixiang.github.io/Persona-Human-Judge/admin.html`，输入管理员口令查看参与身份数、每个人格两组平均分与样本数、每个匿名参与者的会话评分明细。管理员口令不写入前端或仓库，参与者口令无法访问看板数据。已有历史评分自动纳入统计，无需重新上传。

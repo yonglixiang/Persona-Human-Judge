@@ -37,6 +37,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           STUDY_ACCESS_CODE: ${{ secrets.STUDY_ACCESS_CODE }}
+          ADMIN_ACCESS_CODE: ${{ secrets.ADMIN_ACCESS_CODE }}
         run: node scripts/check-secrets.mjs
       - run: npm run db:migrate
       - run: npm run deploy
@@ -49,4 +50,5 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           STUDY_ACCESS_CODE: ${{ secrets.STUDY_ACCESS_CODE }}
+          ADMIN_ACCESS_CODE: ${{ secrets.ADMIN_ACCESS_CODE }}
         run: node scripts/sync-secrets.mjs

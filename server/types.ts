@@ -4,6 +4,7 @@ export interface Env {
  OPENAI_API_KEY?:string;
  SESSION_SECRET?:string;
  STUDY_ACCESS_CODE?:string;
+ ADMIN_ACCESS_CODE?:string;
  ALLOWED_ORIGIN:string;
  OPENAI_MODEL?:string;
  REASONING_EFFORT?:string;

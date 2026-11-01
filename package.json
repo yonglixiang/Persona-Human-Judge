@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "wrangler dev --config wrangler.local.jsonc",
-    "check": "tsc --noEmit && node --check web/app.js && node --check web/api.js && node --check web/i18n.js && node --check web/views.js",
+    "check": "tsc --noEmit && node --check web/app.js && node --check web/api.js && node --check web/i18n.js && node --check web/views.js && node --check web/admin.js && node --check web/markdown.js",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "build:web": "node scripts/build-web.mjs",
     "config:deploy": "node scripts/deploy-config.mjs",

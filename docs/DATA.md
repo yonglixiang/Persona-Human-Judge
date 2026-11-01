@@ -13,3 +13,9 @@
 前端在网络失败时保留未上传事件，并阻止未确认保存的评分进入下一段；已成功持久化的模型回复重试不会再次生成。关闭页面前仍未上传的记录只能依赖同一浏览器中的本地备份恢复，不能保证用户清理浏览器后的恢复。
 
 工作流 Secrets 仅用于受信任的 main 分支和手动部署，不在 pull_request 事件中执行。不要在不可信第三方代码的工作流中提供 Secrets。
+
+## Research dashboard
+
+Open `https://yonglixiang.github.io/Persona-Human-Judge/admin.html` and sign in with the separate `ADMIN_ACCESS_CODE`. Set this repository Actions Secret and rerun the backend workflow to sync it to the Worker. There is no minimum passcode length; it must be nonempty and different from the participant passcode. Admin authentication expires after one hour and is kept only in the tab's session storage. Participant tokens cannot read dashboard APIs; admin tokens cannot act as participants.
+
+The dashboard reads existing D1 records (no migration or data copying). Only `mode=study` records count. Participants are distinct anonymous login identities with at least one uploaded event, not unique real people or page views. Repeat sign-ins/browsers may create new identities. Multiple study sessions under one identity are shown separately. Scores are the latest submitted rating per session/persona/condition. Means weight these session-level ratings equally, include partial sessions, show n, and exclude missing scores. A complete session has 10 distinct ratings; complete participants have at least one complete session. Rating details show the original note, turn count and server receipt time. Search accepts anonymous participant or session IDs, with 25 sessions per page. Refresh updates results on demand.
