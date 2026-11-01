@@ -8,3 +8,10 @@ test('control has no persona skill; settings identical across groups',()=>{const
 test('visible responses only; rejects incomplete response',()=>{assert.equal(outputText({status:'completed',output:[{type:'reasoning',summary:'hidden'},{type:'message',content:[{type:'output_text',text:'hello'}]}]}),'hello');assert.throws(()=>outputText({status:'incomplete'}));});
 test('forged Sites identity headers do not authenticate the standalone Worker',async()=>{const r=await worker.fetch(new Request('https://backend.test/api/events?sessionId=x',{headers:{'oai-authenticated-user-id':'attacker',Origin:'https://allowed.test'}}),{SESSION_SECRET:secret,ALLOWED_ORIGIN:'https://allowed.test'});assert.equal(r.status,401);});
 test('cross-origin request rejected; allowed preflight succeeds',async()=>{const env={ALLOWED_ORIGIN:'https://allowed.test'};assert.equal((await worker.fetch(new Request('https://backend.test/api/session',{method:'POST',headers:{Origin:'https://evil.test'}}),env)).status,403);const r=await worker.fetch(new Request('https://backend.test/api/chat',{method:'OPTIONS',headers:{Origin:env.ALLOWED_ORIGIN}}),env);assert.equal(r.status,204);assert.equal(r.headers.get('Access-Control-Allow-Origin'),env.ALLOWED_ORIGIN);});
+
+test('persona API returns three fixed questions but never raw private fields',async()=>{
+ const {metadata}=await import('../server/personas.ts');const item={name:'Fixture',en:'',role:'Role',age:'',city:'',bio:'Bio',values:'Values',interests:'Interests',voice:'Voice',quote:'',tags:[],suggested_questions:['Question one?','Question two?','Question three?'],private_notes:'do not expose',skill:'do not expose'};
+ const env={PERSONAS:{get:async key=>({json:async()=>key==='manifest.json'?{ids:['p01','p02','p03','p04','p05']}:item})}};
+ const result=await metadata(env);assert.equal(result.length,5);assert.deepEqual(result[0].suggested_questions,item.suggested_questions);assert.ok(!('skill' in result[0]));assert.ok(!('private_notes' in result[0]));
+ item.suggested_questions=['duplicate','duplicate','third'];await assert.rejects(()=>metadata(env));
+});

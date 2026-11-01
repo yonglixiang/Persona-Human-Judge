@@ -37,6 +37,7 @@ metadata.json 示例：
   "role": "职业或身份",
   "city": "城市或地区",
   "tags": ["性格特点一", "性格特点二"],
+  "suggested_questions": ["自然的开场问题一？", "自然的开场问题二？", "自然的开场问题三？"],
   "bio": "基础经历",
   "values": "价值观",
   "interests": "兴趣与日常",
@@ -65,3 +66,9 @@ PERSONAS_BUCKET=persona-human-judge-personas node scripts/upload-personas.mjs /a
 上传目标是私有 R2，不是 GitHub Pages。上传脚本只接受五组 metadata.json/skill.md，校验字段并拒绝疑似 API key。只在明确准备上传时执行不带 `--check` 的命令。
 
 修改 metadata 或 skill 无需把它们提交 GitHub。请在开始新一批评估前统一更新，避免同一轮研究中资料版本变化。
+
+## 固定开场问题
+
+每份 metadata 必须包含 `suggested_questions`：恰好 3 条互不相同的非空字符串，每条最多 300 字符。A/B 两组使用同一份问题，不向模型预先注入；点击只填入输入框，用户可编辑后发送。发送时记录 `inputSource`（suggested/custom），点击本身不计轮次。
+
+可选字段 `birthplace`、`personality`、`education` 支持显示出生地、原始人格描述及教育信息。出生地不应自动映射为现居城市。原始资料与 ID 映射说明保留在本地私有目录，不提交公开仓库。

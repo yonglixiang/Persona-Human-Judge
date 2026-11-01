@@ -4,7 +4,9 @@ const ids=['p01','p02','p03','p04','p05'];const manifest=JSON.parse(await readFi
 const files=[];
 for(const id of ids){const dir=join(root,id);const names=await readdir(dir);if(names.some(x=>!['metadata.json','skill.md'].includes(x)))throw Error(`${id}: unexpected file; only metadata.json and skill.md are permitted`);
  const m=JSON.parse(await readFile(join(dir,'metadata.json'),'utf8'));for(const k of ['name','en','age','role','city','bio','values','interests','voice','quote'])if(typeof m[k]!=='string'||m[k].length>5000)throw Error(`${id}: invalid ${k}`);if(!Array.isArray(m.tags)||m.tags.length>10||m.tags.some(x=>typeof x!=='string'||x.length>100))throw Error(`${id}: invalid tags`);
- const permitted=['id','name','en','age','role','city','bio','values','interests','voice','quote','tags'];if(Object.keys(m).some(k=>!permitted.includes(k)))throw Error(`${id}: metadata contains extra fields; move private data out of participant metadata`);
+ const permitted=['id','name','en','age','role','city','bio','values','interests','voice','quote','tags','birthplace','personality','education','suggested_questions'];if(Object.keys(m).some(k=>!permitted.includes(k)))throw Error(`${id}: metadata contains extra fields; move private data out of participant metadata`);
+ for(const k of ['birthplace','personality','education'])if(m[k]!==undefined&&(typeof m[k]!=='string'||m[k].length>5000))throw Error(`${id}: invalid ${k}`);
+ if(!Array.isArray(m.suggested_questions)||m.suggested_questions.length!==3||new Set(m.suggested_questions).size!==3||m.suggested_questions.some(q=>typeof q!=='string'||!q.trim()||q.length>300))throw Error(`${id}: exactly three distinct suggested_questions required`);
  const skill=await readFile(join(dir,'skill.md'),'utf8');if(!skill.trim()||Buffer.byteLength(skill)>200000)throw Error(`${id}: invalid skill`);
  if(/sk-(?:proj-)?[A-Za-z0-9_-]{20,}/.test(skill+JSON.stringify(m)))throw Error(`${id}: possible API secret; remove before upload`);
  files.push(`${id}/metadata.json`,`${id}/skill.md`);
