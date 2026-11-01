@@ -4,3 +4,5 @@ if(endpoint){const url=new URL(endpoint);if(url.protocol!=='https:'&&url.hostnam
 await rm('site',{recursive:true,force:true});await mkdir('site',{recursive:true});await cp('web','site',{recursive:true});
 await writeFile('site/config.js','window.STUDY_CONFIG='+JSON.stringify({apiBaseUrl:endpoint.replace(/\/$/,'')})+';\n');await writeFile('site/.nojekyll','');
 console.log(endpoint?'Frontend built with configured API origin.':'Frontend built in setup mode (no backend configured).');
+
+await mkdir('site/vendor',{recursive:true});await cp('node_modules/markdown-it/dist/browser/markdown-it.umd.min.js','site/vendor/markdown-it.min.js');
