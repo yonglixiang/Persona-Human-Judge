@@ -9,7 +9,7 @@ personas.forEach((p,i)=>p.suggested_questions=[["你会怎样改造一个不太�
 const KEY='persona-study-github-v4';
 const fresh=()=>({id:crypto.randomUUID(),index:0,group:0,stage:'intro',seq:0,queue:[],sessions:Array.from({length:10},()=>({messages:[],rating:null,note:'',submitted:false,acknowledged:false,started:false,ended:false,request:null,chatError:''})),completeQueued:false});
 let state=fresh();try{const old=JSON.parse(localStorage.getItem(KEY));if(old&&old.sessions?.length===10&&old.id&&Array.isArray(old.queue))state=old}catch{}
-let maxTurns=6;let config={ready:false,loading:true,error:'',authRequired:false};let pending=false,run=0,storageOK=true,uploadBusy=false,uploadError='',uploadPromise=null;
+let maxTurns=6;let config={ready:false,loading:true,error:'',authRequired:false};let selectedQuestionText=null;let pending=false,run=0,storageOK=true,uploadBusy=false,uploadError='',uploadPromise=null;
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch{storageOK=false}};
 const session=()=>state.sessions[state.index*2+state.group];
@@ -31,7 +31,7 @@ function rating(p){return `<div class="eyebrow">YOUR IMPRESSION</div><h1>对话 
 function done(){return `<div class="eyebrow">SESSION COMPLETE</div><h1>谢谢，十段评估已完成。</h1><p class="lead">五个人格的两组对话与评分均已上传。记录包含组别、轮次、时间和判断依据；</p>${personas.map((p,i)=>`<div class="result-row"><span>${p.name}</span><b>A ${state.sessions[i*2].rating} / 5　·　B ${state.sessions[i*2+1].rating} / 5</b></div>`).join('')}<div class="actions"><button class="text" id="reset">开始新的评估</button><button class="primary" id="export">导出本次记录 ↓</button></div><p class="fine">会话编号：${esc(state.id)}</p>`}
 function change(stage){state.stage=stage;save();render();$('#main').focus({preventScroll:true});window.scrollTo({top:0});$('#viewport').scrollTop=0}
 function bind(){
- document.querySelectorAll('.question-choice').forEach(button=>button.onclick=()=>{const input=$('#input');if(!input||input.disabled)return;input.value=button.textContent;$('#send').disabled=false;input.focus();});
+ document.querySelectorAll('.question-choice').forEach(button=>button.onclick=()=>{const input=$('#input');if(!input||input.disabled)return;input.value=button.textContent;selectedQuestionText=button.textContent;$('#send').disabled=false;input.focus();});
  if($('#signIn'))$('#signIn').onclick=async()=>{const code=$('#accessCode').value;$('#signIn').disabled=true;try{await signInStudy(code);await checkModel()}catch(e){config.error=e.message;render()}};
  if($('#checkModel'))$('#checkModel').onclick=()=>checkModel();if($('#retryChat'))$('#retryChat').onclick=()=>requestReply();
  if($('#retryUpload'))$('#retryUpload').onclick=()=>flush();
@@ -46,7 +46,7 @@ function bind(){
  if($('#reset'))$('#reset').onclick=()=>{state=fresh();save();change('intro')};
 }
 async function checkModel(){config.loading=true;try{const r=await apiFetch('/api/chat');const data=await r.json();config={...data,loading:false,authRequired:r.status===401,error:data.error||''};if(r.ok){maxTurns=data.maxTurns||6;if(data.ready){const pr=await apiFetch('/api/personas');const pd=await pr.json();if(!pr.ok)throw Error(pd.error||'人格资料读取失败');const escapeAll=x=>typeof x==='string'?esc(x):Array.isArray(x)?x.map(escapeAll):Object.fromEntries(Object.entries(x).map(([k,v])=>[k,k==='id'?v:escapeAll(v)]));personas=pd.personas.map(escapeAll);}}}catch(e){config={ready:false,loading:false,authRequired:false,error:e.message||'无法连接服务器，请重试。'}}render();}
-function send(){const text=$('#input')?.value.trim();if(!text||pending||session().request||rounds()>=maxTurns||state.stage!=='chat'||!config.ready)return;const s=session();s.messages.push({role:'user',text});const eventId=event('user_message',{text,turn:rounds()+1,inputSource:document.querySelector('.question-choice')&&Array.from(document.querySelectorAll('.question-choice')).some(b=>b.textContent===text)?'suggested':'custom'});s.request={eventId,sessionId:state.id,personaId:personas[state.index].id,condition:condition()};s.chatError='';save();requestReply();}
+function send(){const text=$('#input')?.value.trim();if(!text||pending||session().request||rounds()>=maxTurns||state.stage!=='chat'||!config.ready)return;const s=session();s.messages.push({role:'user',text});const eventId=event('user_message',{text,turn:rounds()+1,inputSource:selectedQuestionText===text?'suggested':'custom'});selectedQuestionText=null;s.request={eventId,sessionId:state.id,personaId:personas[state.index].id,condition:condition()};s.chatError='';save();requestReply();}
 async function requestReply(){const target=session(),request=target.request;if(!request||pending)return;pending=true;target.chatError='';const thisRun=++run;render();$('#messages').scrollTop=99999;
  try{if(!await flush())throw Error('消息上传失败，请重试。');if(thisRun!==run)return;
  const r=await apiFetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(100000)});const data=await r.json();if(!r.ok||!data.text)throw Error(data.error||'模型回复失败，请重试');
