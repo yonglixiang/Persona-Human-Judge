@@ -29,3 +29,7 @@ Participants use `my-scores.html` via “我的评分 / My ratings”. `/api/my-
 The dashboard's overall with/without means are macro-averages: first compute each persona's session-level mean within the group, then average the nonempty persona means with equal weights. Report coverage (personas out of five) and rating count; empty groups remain null, never zero. Individual persona statistics remain available below the macro-average.
 
 Formal dashboards and personal history include only the formal protocol. Older-client events received during the deployment transition remain outside the formal statistics, even if received after the cutoff.
+
+## Participant nicknames
+
+After access-code login, participants supply a nickname before starting or resuming evaluation. `participant_profiles` links the nickname to the authenticated owner ID; no nickname is sent to the model. Nicknames are shown in admin session rows/details and can be searched. Duplicate nicknames do not merge identities or ratings. Existing records without a profile display “No nickname” until that identity supplies one. Names are self-reported, not verified identities. A profile alone is not counted as study participation until an event is uploaded. Profiles are kept across sessions for the same login identity.

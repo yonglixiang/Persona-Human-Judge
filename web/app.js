@@ -30,6 +30,8 @@ function advanceAfterRating(){
  for(let offset=1;offset<=personas.length;offset++){const i=(state.index+offset)%personas.length;if(!state.sessions[i*2+1].acknowledged){resumePersona(i);change(state.stage);return;}}
 }
 function bind(){
+ if($('#nicknameForm'))$('#nicknameForm').onsubmit=async e=>{e.preventDefault();$('#saveNickname').disabled=true;try{const r=await apiFetch('/api/participant',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nickname:$('#nickname').value})});const data=await r.json();if(!r.ok)throw Error(data.error);config.nickname=data.nickname;config.nicknameRequired=false;await checkModel();if(state.queue.length)flush()}catch(e){$('#nicknameError').textContent=errorText(e.message);$('#saveNickname').disabled=false}};
+
  document.querySelectorAll('[data-persona]').forEach(b=>b.onclick=()=>switchPersona(Number(b.dataset.persona)));
  if($('#input'))$('#input').value=session().draft||'';
 
@@ -47,7 +49,7 @@ function bind(){
  if($('#export'))$('#export').onclick=async()=>{const r=await apiFetch('/api/events?sessionId='+encodeURIComponent(state.id));if(!r.ok){alert(tr('导出失败，请稍后重试'));return}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(await r.json(),null,2)],{type:'application/json'}));a.download='persona-study-'+state.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
  if($('#reset'))$('#reset').onclick=()=>{state=fresh();save();change('intro')};
 }
-async function checkModel(){config.loading=true;render();try{const r=await apiFetch('/api/chat');const data=await r.json();config={...data,loading:false,authRequired:r.status===401,error:data.error||''};if(r.ok){maxTurns=data.maxTurns||6;if(data.ready){const pr=await apiFetch('/api/personas');const pd=await pr.json();if(!pr.ok)throw Error(pd.error||'人格资料读取失败');const escapeAll=x=>typeof x==='string'?esc(x):Array.isArray(x)?x.map(escapeAll):Object.fromEntries(Object.entries(x).map(([k,v])=>[k,k==='id'?v:escapeAll(v)]));personas=pd.personas.map(escapeAll);}}}catch(e){config={ready:false,loading:false,authRequired:false,error:e.message||'无法连接服务器，请重试。'}}render();}
+async function checkModel(){config.loading=true;render();try{const profileResponse=await apiFetch('/api/participant');const profile=await profileResponse.json();if(!profileResponse.ok){config={ready:false,loading:false,authRequired:profileResponse.status===401,error:profile.error};render();return;}if(!profile.nickname){config={ready:false,loading:false,authRequired:false,nicknameRequired:true,error:''};render();return;}config.nickname=profile.nickname;config.nicknameRequired=false;const r=await apiFetch('/api/chat');const data=await r.json();config={...data,nickname:profile.nickname,loading:false,authRequired:r.status===401,error:data.error||''};if(r.ok){maxTurns=data.maxTurns||6;if(data.ready){const pr=await apiFetch('/api/personas');const pd=await pr.json();if(!pr.ok)throw Error(pd.error||'人格资料读取失败');const escapeAll=x=>typeof x==='string'?esc(x):Array.isArray(x)?x.map(escapeAll):Object.fromEntries(Object.entries(x).map(([k,v])=>[k,k==='id'?v:escapeAll(v)]));personas=pd.personas.map(escapeAll);}}}catch(e){config={ready:false,loading:false,authRequired:false,error:e.message||'无法连接服务器，请重试。'}}render();}
 function send(){const text=$('#input')?.value.trim();if(!text||pending||session().request||rounds()>=maxTurns||state.stage!=='chat'||!config.ready)return;const s=session();s.draft='';s.messages.push({role:'user',text});const eventId=event('user_message',{text,turn:rounds()+1,inputSource:selectedQuestionText===text?'suggested':'custom'});selectedQuestionText=null;s.request={eventId,sessionId:state.id,personaId:personas[state.index].id,condition:condition()};s.chatError='';save();requestReply();}
 async function requestReply(){const target=session(),request=target.request;if(!request||pending)return;pending=true;target.chatError='';const thisRun=++run;render();$('#messages').scrollTop=99999;
  try{if(!await flush())throw Error('消息上传失败，请重试。');if(thisRun!==run)return;
@@ -57,8 +59,8 @@ async function requestReply(){const target=session(),request=target.request;if(!
  }catch(e){if(thisRun===run)target.chatError=e.message||'连接失败，请重试';}
  finally{save();if(thisRun===run){pending=false;render();if($('#messages'))$('#messages').scrollTop=99999;}}
 }
-document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{$('#viewport').classList.toggle('mobile',b.dataset.view==='mobile');document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x===b))});render();if(state.queue.length)flush();
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{$('#viewport').classList.toggle('mobile',b.dataset.view==='mobile');document.querySelectorAll('[data-view]').forEach(x=>x.setAttribute('aria-pressed',x===b))});render();
 
-checkModel();
+checkModel().then(()=>{if(config.ready&&state.queue.length)flush()});
 
 document.querySelectorAll("[data-language]").forEach(b=>b.onclick=()=>switchLanguage(b.dataset.language));applyLanguage();

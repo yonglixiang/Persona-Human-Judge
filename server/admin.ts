@@ -39,14 +39,14 @@ export async function handle(request:Request,env:Env){
  }
  if(url.pathname==='/api/admin/sessions'){
  const page=Math.max(1,Math.min(100000,Number(url.searchParams.get('page'))||1));
- const search=(url.searchParams.get('search')||'').trim();if(!/^[a-z0-9-]{0,36}$/i.test(search))return Response.json({error:'请输入匿名参与者或会话 ID'},{status:400});
- const filter=' WHERE (s.owner LIKE ? OR s.id LIKE ?)';const pattern='%'+search+'%';
+ const search=(url.searchParams.get('search')||'').trim();if(search.length>80)return Response.json({error:'昵称或 ID 搜索内容过长'},{status:400});
+ const filter=" LEFT JOIN participant_profiles p ON p.owner=s.owner WHERE (instr(lower(s.owner),lower(?))>0 OR instr(lower(s.id),lower(?))>0 OR instr(lower(COALESCE(p.nickname,'')),lower(?))>0)";
  const [total,rows]=await env.DB.batch([
- env.DB.prepare(base+' SELECT COUNT(*) total FROM eligible s'+filter).bind(pattern,pattern),
- env.DB.prepare(base+` SELECT s.id,s.owner,s.created_at,
+ env.DB.prepare(base+' SELECT COUNT(*) total FROM eligible s'+filter).bind(search,search,search),
+ env.DB.prepare(base+` SELECT s.id,s.owner,p.nickname,s.created_at,
  (SELECT MAX(received_at) FROM study_events e WHERE e.session_id=s.id) last_activity,
  (SELECT json_group_array(json_object('personaId',r.persona_id,'condition',r.condition,'score',r.score,'note',r.note,'turns',r.turns,'receivedAt',r.received_at)) FROM ratings r WHERE r.session_id=s.id) ratings
- FROM eligible s`+filter+' ORDER BY last_activity DESC,s.id LIMIT 25 OFFSET ?').bind(pattern,pattern,(Math.floor(page)-1)*25)]);
+ FROM eligible s`+filter+' ORDER BY last_activity DESC,s.id LIMIT 25 OFFSET ?').bind(search,search,search,(Math.floor(page)-1)*25)]);
  return Response.json({page:Math.floor(page),pageSize:25,total:(total.results[0] as any).total,sessions:rows.results.map((r:any)=>({...r,ratings:JSON.parse(r.ratings||'[]')}))});
  }
  return Response.json({error:'Not found'},{status:404});
