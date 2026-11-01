@@ -11,3 +11,5 @@ exports/
 *.tar.gz
 *.pem
 .DS_Store
+
+/private-personas-ready/

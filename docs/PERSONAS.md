@@ -72,3 +72,9 @@ PERSONAS_BUCKET=persona-human-judge-personas node scripts/upload-personas.mjs /a
 每份 metadata 必须包含 `suggested_questions`：恰好 3 条互不相同的非空字符串，每条最多 300 字符。A/B 两组使用同一份问题，不向模型预先注入；点击只填入输入框，用户可编辑后发送。发送时记录 `inputSource`（suggested/custom），点击本身不计轮次。
 
 可选字段 `birthplace`、`personality`、`education` 支持显示出生地、原始人格描述及教育信息。出生地不应自动映射为现居城市。原始资料与 ID 映射说明保留在本地私有目录，不提交公开仓库。
+
+## 中英双语
+
+`translations` 可包含完整的 `zh` / `en` 展示对象（字段与顶层 metadata 相同，但不含 `id` 或嵌套 translations）。两种语言各提供 3 个 `suggested_questions`，编号和语义一一对应。服务器只返回白名单展示字段，skill 不包含在翻译数据中。原始 skill 不翻译或改写。
+
+界面语言会随每条研究事件保存为 `uiLanguage`。切换语言不会翻译已发送的消息，也不会改变已有评分。实际聊天回复沿用用户提问语言。

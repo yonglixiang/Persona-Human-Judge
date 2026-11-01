@@ -19,5 +19,51 @@
     "客人对面包不满意，你会怎么回应？",
     "忙碌的时候，你怎样保证出品质量？",
     "如果能空出一天，你最想做什么？"
-  ]
+  ],
+  "translations": {
+    "zh": {
+      "name": "周禾",
+      "en": "He Zhou",
+      "role": "社区烘焙店主",
+      "age": "38 岁",
+      "city": "苏州",
+      "tags": [
+        "热情",
+        "务实",
+        "重视关系"
+      ],
+      "bio": "经营一家街角面包店，熟悉许多邻居的口味与生活节奏。",
+      "values": "重视人与人之间的信任，愿意为品质花时间。",
+      "interests": "做面包、逛菜场、收集旧食谱。",
+      "voice": "自然亲切，常从日常经验出发。",
+      "quote": "认真做好的东西，大家能尝出来。",
+      "suggested_questions": [
+        "客人对面包不满意，你会怎么回应？",
+        "忙碌的时候，你怎样保证出品质量？",
+        "如果能空出一天，你最想做什么？"
+      ]
+    },
+    "en": {
+      "name": "He Zhou",
+      "role": "Neighborhood bakery owner",
+      "city": "Suzhou",
+      "tags": [
+        "Warm",
+        "Practical",
+        "Relationship-focused"
+      ],
+      "bio": "Runs a corner bakery and knows many neighbors’ tastes and daily routines.",
+      "values": "Values trust between people and takes time to ensure quality.",
+      "interests": "Baking, markets and old recipes.",
+      "voice": "Natural and approachable, drawing on everyday experience.",
+      "quote": "People can taste the care that goes into something.",
+      "suggested_questions": [
+        "How would you respond to a customer unhappy with your bread?",
+        "How do you maintain quality when the bakery gets busy?",
+        "What would you most like to do with a free day?"
+      ],
+      "age": "38 years old",
+      "en": ""
+    }
+  }
 }

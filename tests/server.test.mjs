@@ -15,3 +15,6 @@ test('persona API returns three fixed questions but never raw private fields',as
  const result=await metadata(env);assert.equal(result.length,5);assert.deepEqual(result[0].suggested_questions,item.suggested_questions);assert.ok(!('skill' in result[0]));assert.ok(!('private_notes' in result[0]));
  item.suggested_questions=['duplicate','duplicate','third'];await assert.rejects(()=>metadata(env));
 });
+test('translated metadata is whitelisted and translations require both locales',async()=>{
+ const {metadata}=await import('../server/personas.ts');const fields={name:'Fixture',en:'',age:'',role:'Role',city:'',bio:'Bio',values:'Values',interests:'Interests',voice:'Voice',quote:'',tags:[],suggested_questions:['One?','Two?','Three?']};const item={...fields,translations:{zh:{...fields,skill:'private'},en:{...fields,secret:'private'}}};const env={PERSONAS:{get:async key=>({json:async()=>key==='manifest.json'?{ids:['p01','p02','p03','p04','p05']}:item})}};const result=await metadata(env);assert.ok(!('skill' in result[0].translations.zh));assert.ok(!('secret' in result[0].translations.en));delete item.translations.en;await assert.rejects(()=>metadata(env));
+});
