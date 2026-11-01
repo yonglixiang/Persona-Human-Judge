@@ -7,3 +7,17 @@ test('all English screens and sample questions render without untranslated Chine
 test('language changes never rewrite transcript or scores; events record UI language',()=>{const {context}=fixture();vm.runInContext("session().messages.push({role:'user',text:'保留 original text'});session().rating=4;uiLanguage='en'",context);assert.match(vm.runInContext('transcript()',context),/保留 original text/);assert.equal(vm.runInContext('session().rating',context),4);vm.runInContext("event('rating',{score:4,note:''})",context);assert.equal(vm.runInContext('state.queue[0].uiLanguage',context),'en');vm.runInContext("uiLanguage='zh'",context);assert.match(vm.runInContext('transcript()',context),/保留 original text/);});
 
 test('switching language preserves an unsent draft and current trial',()=>{const {context,input}=fixture();input.value='Unsent draft 保留';vm.runInContext("state.stage='chat';state.group=1;switchLanguage('en')",context);assert.equal(input.value,'Unsent draft 保留');assert.equal(vm.runInContext('state.group',context),1);assert.equal(vm.runInContext('state.stage',context),'chat');assert.equal(vm.runInContext('document.documentElement.lang',context),'en');});
+
+test('persona navigation preserves drafts, messages and ratings and resumes the correct group',()=>{
+ const {context,input}=fixture();vm.runInContext("change=stage=>{state.stage=stage;save()};state.stage='chat';session().started=true;session().messages.push({role:'user',text:'Keep this'});session().rating=3",context);
+ input.value='Unsent draft';vm.runInContext('switchPersona(4)',context);
+ assert.equal(vm.runInContext('state.index',context),4);assert.equal(vm.runInContext('state.stage',context),'intro');
+ vm.runInContext('switchPersona(0)',context);
+ assert.equal(vm.runInContext('state.stage',context),'chat');assert.equal(vm.runInContext('session().draft',context),'Unsent draft');assert.equal(vm.runInContext('session().messages[0].text',context),'Keep this');assert.equal(vm.runInContext('session().rating',context),3);
+ vm.runInContext('state.sessions[0].acknowledged=true;switchPersona(0)',context);assert.equal(vm.runInContext('state.group',context),1);
+});
+test('finishing persona five first continues remaining personas; completion requires all ten',()=>{
+ const {context}=fixture();vm.runInContext("change=stage=>state.stage=stage;state.index=4;state.group=1;state.sessions[8].acknowledged=true;state.sessions[9].acknowledged=true;advanceAfterRating()",context);
+ assert.equal(vm.runInContext('state.index',context),0);assert.notEqual(vm.runInContext('state.stage',context),'done');
+ vm.runInContext('state.sessions.forEach(s=>s.acknowledged=true);advanceAfterRating()',context);assert.equal(vm.runInContext('state.stage',context),'done');
+});
